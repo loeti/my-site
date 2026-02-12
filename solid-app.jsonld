@@ -1,9 +1,0 @@
-{
-  "@context": ["https://www.w3.org/ns/solid/oidc-context.jsonld"],
-  "client_id": "https://deine-domain.de/solid-app.jsonld",
-  "client_name": "Meine iOS App",
-  "redirect_uris": ["com.deineapp.auth:/oauth2redirect"],
-  "grant_types": ["authorization_code", "refresh_token"],
-  "response_types": ["code"],
-  "scope": "openid profile webid offline_access"
-}
