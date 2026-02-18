@@ -2,7 +2,7 @@
   "@context": ["https://www.w3.org/ns/solid/oidc-context.jsonld"],
   "client_id": "https://loeti.github.io/my-site/solid-app.jsonld",
   "client_name": "My Solidpod App",
-  "redirect_uris": ["http://localhost/oauth2redirect"],
+  "redirect_uris": ["http://loeti.github.io/my-site/oauth2redirect"],
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
   "scope": "openid profile webid offline_access"
