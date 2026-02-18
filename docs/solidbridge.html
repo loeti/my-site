@@ -10,6 +10,49 @@
                     import { VCARD, FOAF } from 'https://esm.sh/@inrupt/vocab-common-rdf?bundle';
                                         
                     const session = new Session();
+
+                    async function initSolid() {
+                        const currentUrl = window.location.href;
+                        console.log("🚀 Solid Bridge gestartet auf: " + currentUrl);
+                    
+                        // FALL 1: Wir kommen gerade vom Login zurück (Code in URL)
+                        if (currentUrl.includes("code=") && currentUrl.includes("state=")) {
+                            console.log("📥 Auth-Code erkannt! Schließe Login ab...");
+                            try {
+                                // Inrupt liest die URL automatisch aus
+                                await session.handleIncomingRedirect({
+                                    url: currentUrl,
+                                    restorePreviousSession: true 
+                                });
+                                console.log("✅ Login abgeschlossen & Tokens sollten jetzt in DB sein.");
+                                sendMessage("success", session.info.webId);
+                                
+                                // Optional: URL säubern (damit der User den Code nicht mehr sieht)
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            } catch (error) {
+                                console.error("❌ Fehler beim Verarbeiten des Redirects:", error);
+                                sendMessage("error", error.toString());
+                            }
+                        } 
+                        // FALL 2: Normaler Start (Versuche alte Session aus DB zu laden)
+                        else {
+                            console.log("🔄 Versuche Session wiederherzustellen...");
+                            try {
+                                await session.handleIncomingRedirect({ restorePreviousSession: true });
+                                
+                                if (session.info.isLoggedIn) {
+                                    console.log("✅ Session wiederhergestellt aus DB!");
+                                    sendMessage("success", session.info.webId);
+                                } else {
+                                    console.log("ℹ️ Keine aktive Session gefunden.");
+                                    sendMessage("status", "loggedOut");
+                                }
+                            } catch (error) {
+                                 // Wenn hier ein Fehler kommt, ist die DB evtl. korrupt oder leer
+                                 console.log("Keine Session zum Wiederherstellen: " + error);
+                            }
+                        }
+                    }
                     
                     window.startSolidLogin = async function(providerUrl, clientId, redirectUrl) {
                         try {
@@ -96,6 +139,8 @@
                     }
                     
                     sendMessage("ready", window.location.href);
+
+                    initSolid();
                 </script>
     </head>
     <body style="font-family: -apple-system, sans-serif; text-align: center; padding-top: 50px;">
