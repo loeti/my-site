@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Solid Bridge</title>
+                <script type="module">
+                    import { Session } from 'https://esm.sh/@inrupt/solid-client-authn-browser?bundle';
+                    import { getSolidDataset, getThing, getStringNoLocale, overwriteFile } from 'https://esm.sh/@inrupt/solid-client?bundle';
+                    import { VCARD, FOAF } from 'https://esm.sh/@inrupt/vocab-common-rdf?bundle';
+                                        
+                    const session = new Session();
+                    
+                    window.startSolidLogin = async function(providerUrl, clientId, redirectUrl) {
+                        try {
+                            await session.login({
+                                oidcIssuer: providerUrl,
+                                clientId: clientId,
+                                redirectUrl: redirectUrl
+                            });
+                        } catch (error) {
+                            sendMessage("error", "Login-Fehler: " + error.toString());
+                        }
+                    };
+                    
+                    window.tryRestoreSession = async function() {
+                        try {
+                            // Dieser Befehl stellt die Session aus dem localStorage wieder her
+                            await session.handleIncomingRedirect({ restorePreviousSession: true });
+                            
+                            if (session.info.isLoggedIn) {
+                                sendMessage("success", session.info.webId); // Hat geklappt!
+                            } else {
+                                sendMessage("restoreFailed", "Keine aktive Session gefunden."); // Brauchen neuen Login
+                            }
+                        } catch (error) {
+                            sendMessage("restoreFailed", error.toString());
+                        }
+                    };
+                    
+                    window.writeTestFile = async function(webId, message, filename) {
+                        try {
+                            const podRoot = webId.replace("profile/card#me", "");
+                            
+                            const targetUrl = podRoot + "private/" + filename;
+                            
+                            const file = new Blob([message], { type: "text/plain" });
+                            
+                            await overwriteFile(targetUrl,
+                                                file,
+                                                { contentType: "text/plain", fetch: session.fetch });
+                                                
+                            sendMessage("writeSuccess", targetUrl);
+                        } catch (error) {
+                            sendMessage("error", "Konnte Datei nicht schreiben: " + error.toString());
+                        }
+                    };
+                    
+                    window.processTokens = async function(redirectUrlString) {
+                        try {
+                            await session.handleIncomingRedirect({
+                                url: redirectUrlString,
+                                restorePreviousSession: true
+                            });
+                            
+                            if (session.info.isLoggedIn) {
+                                sendMessage("success", session.info.webId);
+                            } else {
+                                sendMessage("error", "Code verarbeitet, aber nicht eingeloggt.");
+                            }
+                        } catch (error) {
+                            sendMessage("error", "Token-Fehler: " + error.toString());
+                        }
+                    };
+                    
+                    window.fetchProfileName = async function(webId) {
+                        try {
+                            const myDataset = await getSolidDataset(webId, { fetch: session.fetch });
+                            
+                            const profile = getThing(myDataset, webId);
+                            
+                            const name = getStringNoLocale(profile, VCARD.fn)
+                            || getStringNoLocale(profile, FOAF.name)
+                            || "Anonymer Pod-Nutzer";
+                            
+                            sendMessage("profileName", name);
+                        } catch (error) {
+                            sendMessage("error", "Konnte Profil nicht lesen: " + error.toString());
+                        }
+                    }
+                    
+                    function sendMessage(type, payload) {
+                        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.solidAuth) {
+                            window.webkit.messageHandlers.solidAuth.postMessage({ "type": type, "payload": payload });
+                        }
+                    }
+                    
+                    sendMessage("ready", window.location.href);
+                </script>
+    </head>
+    <body style="font-family: -apple-system, sans-serif; text-align: center; padding-top: 50px;">
+        <h2>Solid Login...</h2>
+    </body>
+</html>
