@@ -9,7 +9,19 @@
                     import { getSolidDataset, getThing, getStringNoLocale, overwriteFile } from 'https://esm.sh/@inrupt/solid-client?bundle';
                     import { VCARD, FOAF } from 'https://esm.sh/@inrupt/vocab-common-rdf?bundle';
                     
-                    const session = new Session();
+                    // Wir bauen einen extrem simplen Speicher-Wrapper, der Inrupt zwingt, 
+                    // ausschließlich den localStorage zu nutzen.
+                    const simpleStorage = {
+                        getItem: (key) => window.localStorage.getItem(key),
+                        setItem: (key, value) => window.localStorage.setItem(key, value),
+                        removeItem: (key) => window.localStorage.removeItem(key)
+                    };
+                    
+                    // Wir übergeben unseren Speicher an Inrupt und überschreiben die Standard-Datenbank
+                    const session = new Session({
+                        insecureStorage: simpleStorage,
+                        secureStorage: simpleStorage
+                    });
                     
                     async function initSolid() {
                         const currentUrl = window.location.href;
