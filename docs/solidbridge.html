@@ -8,78 +8,50 @@
                     import { Session } from 'https://esm.sh/@inrupt/solid-client-authn-browser?bundle';
                     import { getSolidDataset, getThing, getStringNoLocale, overwriteFile } from 'https://esm.sh/@inrupt/solid-client?bundle';
                     import { VCARD, FOAF } from 'https://esm.sh/@inrupt/vocab-common-rdf?bundle';
-                                        
+                    
                     const session = new Session();
-
+                    
                     async function initSolid() {
                         const currentUrl = window.location.href;
-                        console.log("🚀 Solid Bridge gestartet auf: " + currentUrl);
-                    
-                        // FALL 1: Wir kommen gerade vom Login zurück (Code in URL)
-                        if (currentUrl.includes("code=") && currentUrl.includes("state=")) {
-                            console.log("📥 Auth-Code erkannt! Schließe Login ab...");
+                        console.log("🌐 Bridge geladen auf: " + currentUrl);
+                        
+                        // Fall A: Wir kommen gerade vom Login zurück (Code in der URL)
+                        if (currentUrl.includes("code=") || currentUrl.includes("state=")) {
+                            console.log("📥 Auth-Parameter gefunden! Verarbeite Login...");
                             try {
-                                // Inrupt liest die URL automatisch aus
                                 await session.handleIncomingRedirect({
                                     url: currentUrl,
-                                    restorePreviousSession: true 
+                                    restorePreviousSession: true
                                 });
-                                console.log("✅ Login abgeschlossen & Tokens sollten jetzt in DB sein.");
+                                console.log("✅ Login komplett!");
                                 sendMessage("success", session.info.webId);
                                 
-                                // Optional: URL säubern (damit der User den Code nicht mehr sieht)
+                                // Adresszeile aufräumen, damit bei einem Reload nicht nochmal der Code verarbeitet wird
                                 window.history.replaceState({}, document.title, window.location.pathname);
-                            } catch (error) {
-                                console.error("❌ Fehler beim Verarbeiten des Redirects:", error);
-                                sendMessage("error", error.toString());
+                            } catch (e) {
+                                sendMessage("error", "Redirect-Fehler: " + e.toString());
                             }
-                        } 
-                        // FALL 2: Normaler Start (Versuche alte Session aus DB zu laden)
+                        }
+                        // Fall B: Normaler Start / App Neustart
                         else {
-                            console.log("🔄 Versuche Session wiederherzustellen...");
+                            console.log("🔄 Versuche Session über Refresh Token wiederherzustellen...");
                             try {
+                                // HIER nutzt Inrupt jetzt den gespeicherten Refresh Token anstatt des blockierten iframes!
                                 await session.handleIncomingRedirect({ restorePreviousSession: true });
                                 
                                 if (session.info.isLoggedIn) {
-                                    console.log("✅ Session wiederhergestellt aus DB!");
+                                    console.log("✅ BAM! Session erfolgreich wiederhergestellt!");
                                     sendMessage("success", session.info.webId);
                                 } else {
-                                    console.log("ℹ️ Keine aktive Session gefunden.");
+                                    console.log("ℹ️ Keine aktive Session gefunden. Bitte einloggen.");
                                     sendMessage("status", "loggedOut");
                                 }
-                            } catch (error) {
-                                 // Wenn hier ein Fehler kommt, ist die DB evtl. korrupt oder leer
-                                 console.log("Keine Session zum Wiederherstellen: " + error);
+                            } catch (e) {
+                                console.log("Wiederherstellung fehlgeschlagen:", e);
+                                sendMessage("status", "loggedOut");
                             }
                         }
                     }
-                    
-                    window.startSolidLogin = async function(providerUrl, clientId, redirectUrl) {
-                        try {
-                            await session.login({
-                                oidcIssuer: providerUrl,
-                                clientId: clientId,
-                                redirectUrl: redirectUrl
-                            });
-                        } catch (error) {
-                            sendMessage("error", "Login-Fehler: " + error.toString());
-                        }
-                    };
-                    
-                    window.tryRestoreSession = async function() {
-                        try {
-                            // Dieser Befehl stellt die Session aus dem localStorage wieder her
-                            await session.handleIncomingRedirect({ restorePreviousSession: true });
-                            
-                            if (session.info.isLoggedIn) {
-                                sendMessage("success", session.info.webId); // Hat geklappt!
-                            } else {
-                                sendMessage("restoreFailed", "Keine aktive Session gefunden."); // Brauchen neuen Login
-                            }
-                        } catch (error) {
-                            sendMessage("restoreFailed", error.toString());
-                        }
-                    };
                     
                     window.writeTestFile = async function(webId, message, filename) {
                         try {
@@ -96,23 +68,6 @@
                             sendMessage("writeSuccess", targetUrl);
                         } catch (error) {
                             sendMessage("error", "Konnte Datei nicht schreiben: " + error.toString());
-                        }
-                    };
-                    
-                    window.processTokens = async function(redirectUrlString) {
-                        try {
-                            await session.handleIncomingRedirect({
-                                url: redirectUrlString,
-                                restorePreviousSession: true
-                            });
-                            
-                            if (session.info.isLoggedIn) {
-                                sendMessage("success", session.info.webId);
-                            } else {
-                                sendMessage("error", "Code verarbeitet, aber nicht eingeloggt.");
-                            }
-                        } catch (error) {
-                            sendMessage("error", "Token-Fehler: " + error.toString());
                         }
                     };
                     
@@ -138,8 +93,6 @@
                         }
                     }
                     
-                    sendMessage("ready", window.location.href);
-
                     initSolid();
                 </script>
     </head>
