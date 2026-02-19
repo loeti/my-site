@@ -52,6 +52,18 @@
                             }
                         }
                     }
+
+                     window.startSolidLogin = async function(providerUrl, clientId, redirectUrl) {
+                        try {
+                            await session.login({
+                                oidcIssuer: providerUrl,
+                                clientId: clientId,
+                                redirectUrl: redirectUrl
+                            });
+                        } catch (error) {
+                            sendMessage("error", "Login-Fehler: " + error.toString());
+                        }
+                    };
                     
                     window.writeTestFile = async function(webId, message, filename) {
                         try {
