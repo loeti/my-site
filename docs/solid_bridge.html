@@ -9,7 +9,7 @@
                     import { getSolidDataset, getThing, getStringNoLocale, overwriteFile } from 'https://esm.sh/@inrupt/solid-client?bundle';
                     import { VCARD, FOAF } from 'https://esm.sh/@inrupt/vocab-common-rdf?bundle';
                     
-                    const session = new Session();
+                    const session = new Session({keepAlive: true});
                     
                     async function refresh() {
                         const currentUrl = window.location.href;  
