@@ -11,44 +11,19 @@
                     
                     const session = new Session();
                     
-                    async function initSolid() {
-                        const currentUrl = window.location.href;
-                        console.log("🌐 Bridge geladen auf: " + currentUrl);
-                        
-                        // Fall A: Wir kommen gerade vom Login zurück (Code in der URL)
-                        if (currentUrl.includes("code=") || currentUrl.includes("state=")) {
-                            console.log("📥 Auth-Parameter gefunden! Verarbeite Login...");
-                            try {
-                                await session.handleIncomingRedirect({
-                                    url: currentUrl,
-                                    restorePreviousSession: true
-                                });
-                                console.log("✅ Login komplett!");
-                                sendMessage("success", session.info.webId);
-                                
-                                // Adresszeile aufräumen, damit bei einem Reload nicht nochmal der Code verarbeitet wird
-                                window.history.replaceState({}, document.title, window.location.pathname);
-                            } catch (e) {
-                                sendMessage("error", "Redirect-Fehler: " + e.toString());
-                            }
-                        }
-                        // Fall B: Normaler Start / App Neustart
-                        else {
-                            console.log("🔄 Versuche Session über Refresh Token wiederherzustellen...");
-                            try {
-                                // HIER nutzt Inrupt jetzt den gespeicherten Refresh Token anstatt des blockierten iframes!
+                    async function refresh() {
+                        const currentUrl = window.location.href;  
+
+                        try {
                                 await session.handleIncomingRedirect({ restorePreviousSession: true });
-                                
+                                sendMessage("success", session.info.webId);
                                 if (session.info.isLoggedIn) {
-                                    console.log("✅ BAM! Session erfolgreich wiederhergestellt!");
                                     sendMessage("success", session.info.webId);
                                 } else {
-                                    console.log("ℹ️ Keine aktive Session gefunden. Bitte einloggen.");
                                     sendMessage("status", "loggedOut");
                                 }
                             } catch (e) {
-                                console.log("Wiederherstellung fehlgeschlagen:", e);
-                                sendMessage("status", "loggedOut");
+                                sendMessage("error", "redirection failed: " + e.toString());
                             }
                         }
                     }
@@ -61,16 +36,14 @@
                                 redirectUrl: redirectUrl
                             });
                         } catch (error) {
-                            sendMessage("error", "Login-Fehler: " + error.toString());
+                            sendMessage("error", "login failed: " + error.toString());
                         }
                     };
                     
                     window.writeTestFile = async function(webId, message, filename) {
                         try {
                             const podRoot = webId.replace("profile/card#me", "");
-                            
                             const targetUrl = podRoot + "private/" + filename;
-                            
                             const file = new Blob([message], { type: "text/plain" });
                             
                             await overwriteFile(targetUrl,
@@ -79,23 +52,21 @@
                                                 
                             sendMessage("writeSuccess", targetUrl);
                         } catch (error) {
-                            sendMessage("error", "Konnte Datei nicht schreiben: " + error.toString());
+                            sendMessage("error", "file write failed: " + error.toString());
                         }
                     };
                     
                     window.fetchProfileName = async function(webId) {
                         try {
                             const myDataset = await getSolidDataset(webId, { fetch: session.fetch });
-                            
                             const profile = getThing(myDataset, webId);
-                            
                             const name = getStringNoLocale(profile, VCARD.fn)
                             || getStringNoLocale(profile, FOAF.name)
-                            || "Anonymer Pod-Nutzer";
+                            || "Anonymous user";
                             
                             sendMessage("profileName", name);
                         } catch (error) {
-                            sendMessage("error", "Konnte Profil nicht lesen: " + error.toString());
+                            sendMessage("error", "profile read failed: " + error.toString());
                         }
                     }
                     
@@ -109,6 +80,6 @@
                 </script>
     </head>
     <body style="font-family: -apple-system, sans-serif; text-align: center; padding-top: 50px;">
-        <h2>Solid Login...</h2>
+        <h2>Solid Login</h2>
     </body>
 </html>
