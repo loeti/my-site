@@ -20,7 +20,7 @@
                                 if (session.info.isLoggedIn) {
                                     sendMessage("success", session.info.webId);
                                 } else {
-                                    sendMessage("status", "loggedOut");
+                                    sendMessage("restoreFailed", "loggedOut");
                                 }
                             } catch (e) {
                                 sendMessage("error", "redirection failed: " + e.toString());
