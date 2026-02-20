@@ -8,9 +8,15 @@
                     import { Session } from 'https://esm.sh/@inrupt/solid-client-authn-browser?bundle';
                     import { getSolidDataset, getThing, getStringNoLocale, overwriteFile } from 'https://esm.sh/@inrupt/solid-client?bundle';
                     import { VCARD, FOAF } from 'https://esm.sh/@inrupt/vocab-common-rdf?bundle';
+
+                    // Define a simple storage wrapper for localStorage
+                    const storage = {
+                      getItem: (key) => window.localStorage.getItem(key),
+                      setItem: (key, value) => window.localStorage.setItem(key, value),
+                      removeItem: (key) => window.localStorage.removeItem(key),
+                    };
                     
-                    const session = new Session({keepAlive: true}, '5daa8fa8-20fc-4ef0-975c-79a626bcd2cd
-');
+                    const session = new Session({storage: storage, keepAlive: true});
                     
                     async function refresh() {
                         const currentUrl = window.location.href;  
