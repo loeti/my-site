@@ -22,11 +22,11 @@
                                 } else {
                                     sendMessage("restoreFailed", "loggedOut");
                                 }
-                            } catch (e) {
-                                sendMessage("error", "redirection failed: " + e.toString());
-                            }
+                        } catch (e) {
+                            sendMessage("error", "redirection failed: " + e.toString());
                         }
                     }
+                    
 
                      window.startSolidLogin = async function(providerUrl, clientId, redirectUrl) {
                         try {
