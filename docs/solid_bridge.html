@@ -28,10 +28,10 @@
                     }
                     
 
-                     window.startSolidLogin = async function(providerUrl, clientId, redirectUrl) {
+                     window.startSolidLogin = async function(oidcIssuerUrl, clientId, redirectUrl) {
                         try {
                             await session.login({
-                                oidcIssuer: providerUrl,
+                                oidcIssuer: oidcIssuerUrl,
                                 clientId: clientId,
                                 redirectUrl: redirectUrl
                             });
