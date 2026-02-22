@@ -12,26 +12,26 @@
                     const session = new Session({secureStorage: window.localStorage, keepAlive: true});
                     
                     async function refresh() {
-                        const currentUrl = window.location.href;  
-
+                        const currentUrl = window.location.href;
+                        
                         try {
-                                await session.handleIncomingRedirect({ restorePreviousSession: true });
+                            await session.handleIncomingRedirect({ restorePreviousSession: true });
+                            sendMessage("success", session.info.webId);
+                            if (session.info.isLoggedIn) {
                                 sendMessage("success", session.info.webId);
-                                if (session.info.isLoggedIn) {
-                                    sendMessage("success", session.info.webId);
-                                } else {
-                                    sendMessage("restoreFailed", "loggedOut");
-                                }
+                            } else {
+                                sendMessage("restoreFailed", "loggedOut");
+                            }
                         } catch (e) {
                             sendMessage("error", "redirection failed: " + e.toString());
                         }
                     }
                     
-
-                     window.startSolidLogin = async function(oidcIssuerUrl, clientId, redirectUrl) {
+                    
+                    window.startSolidLogin = async function(oidcIssuer, clientId, redirectUrl) {
                         try {
                             await session.login({
-                                oidcIssuer: oidcIssuerUrl,
+                                oidcIssuer: oidcIssuer,
                                 clientId: clientId,
                                 redirectUrl: redirectUrl
                             });
@@ -39,6 +39,28 @@
                             sendMessage("error", "login failed: " + error.toString());
                         }
                     };
+                    
+                    window.logout = async function() {
+                        try {
+                            await session.logout({
+                                logoutType: 'app',
+                            });
+                        } catch (error) {
+                            sendMessage("error", "logout app failed: " + error.toString());
+                        }
+                    }
+                    
+                    window.logoutIdp = async function(redirectUrl) {
+                        try {
+                            await session.logout({
+                                logoutType: 'idp',
+                                postLogoutUrl: redirectUrl,
+                                state: "loggedout"
+                            });
+                        } catch (error) {
+                            sendMessage("error", "logout idp failed: " + error.toString());
+                        }
+                    }
                     
                     window.writeTestFile = async function(webId, message, filename) {
                         try {
@@ -50,7 +72,7 @@
                                                 file,
                                                 { contentType: "text/plain", fetch: session.fetch });
                                                 
-                            sendMessage("writeSuccess", targetUrl);
+                                                sendMessage("writeSuccess", targetUrl);
                         } catch (error) {
                             sendMessage("error", "file write failed: " + error.toString());
                         }
@@ -78,7 +100,7 @@
                     
                     refresh();
                 </script>
-    </head>
+            </head>
     <body style="font-family: -apple-system, sans-serif; text-align: center; padding-top: 50px;">
         <h2>Solid Login</h2>
     </body>
