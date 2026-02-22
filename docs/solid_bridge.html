@@ -40,6 +40,28 @@
                         }
                     };
                     
+                    window.logout = async function() {
+                        try {
+                            await session.logout({
+                                logoutType: 'app',
+                            });
+                        } catch (error) {
+                            sendMessage("error", "logout app failed: " + error.toString());
+                        }
+                    }
+                    
+                    window.logoutIdp = async function(redirectUrl) {
+                        try {
+                            await session.logout({
+                                logoutType: 'idp',
+                                postLogoutUrl: redirectUrl,
+                                state: "loggedout"
+                            });
+                        } catch (error) {
+                            sendMessage("error", "logout idp failed: " + error.toString());
+                        }
+                    }
+                    
                     window.writeTestFile = async function(webId, message, filename) {
                         try {
                             const podRoot = webId.replace("profile/card#me", "");
