@@ -11,7 +11,7 @@
                     
                     const session = new Session({secureStorage: window.localStorage, keepAlive: true});
                     
-                    window.refreh = async function refresh() {
+                    window.refresh = async function() {
                         const currentUrl = window.location.href;
                         
                         try {
