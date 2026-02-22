@@ -4,6 +4,5 @@
   "client_name": "My Solidpod App",
   "redirect_uris": ["https://loeti.github.io/my-site/solid_bridge.html"],
   "grant_types": ["authorization_code", "refresh_token"],
-  "scope": "openid profile webid offline_access",
-  "post_logout_redirect_uris" ["https://loeti.github.io/my-site/solid_bridge.html"]
+  "scope": "openid profile webid offline_access"]
 }
