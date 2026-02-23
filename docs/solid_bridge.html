@@ -16,7 +16,6 @@
                         
                         try {
                             await session.handleIncomingRedirect({ restorePreviousSession: true });
-                            sendMessage("success", session.info.webId);
                             if (session.info.isLoggedIn) {
                                 sendMessage("success", session.info.webId);
                             } else {
