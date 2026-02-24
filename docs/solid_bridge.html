@@ -6,7 +6,7 @@
                 <title>Solid Bridge</title>
                 <script type="module">
                     import { Session } from 'https://esm.sh/@inrupt/solid-client-authn-browser?bundle';
-                    import { getSolidDataset, getThing, getStringNoLocale, overwriteFile } from 'https://esm.sh/@inrupt/solid-client?bundle';
+                    import { getSolidDataset, getThing, getStringNoLocale, getDate, overwriteFile } from 'https://esm.sh/@inrupt/solid-client?bundle';
                     import { VCARD, FOAF } from 'https://esm.sh/@inrupt/vocab-common-rdf?bundle';
                     
                     const session = new Session({secureStorage: window.localStorage, keepAlive: true});
@@ -92,16 +92,17 @@
                     }
 
                     window.fetchProfileBirthdate = async function(webId) {
-                        try {
-                            const myDataset = await getSolidDataset(webId, { fetch: session.fetch });
-                            const profile = getThing(myDataset, webId);
-                            const bday = getStringNoLocale(profile, VCARD.bday) || "";
-
-                            sendMessage("profileBirthdate", bday);
-                        } catch (error) {
-                            sendMessage("error", "birthdate read failed: " + error.toString());
-                        }
-                    }
+                          try {
+                              const myDataset = await getSolidDataset(webId, { fetch: session.fetch });
+                              const profile = getThing(myDataset, webId);
+                              const bday = getDate(profile, VCARD.bday);
+                              const result = bday ? bday.toISOString().split('T')[0] : "";
+                    
+                              sendMessage("profileBirthdate", result);
+                          } catch (error) {
+                              sendMessage("error", "birthdate read failed: " + error.toString());
+                          }
+                      }
                     
                     function sendMessage(type, payload) {
                         if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.solidAuth) {
