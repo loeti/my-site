@@ -84,10 +84,22 @@
                             const name = getStringNoLocale(profile, VCARD.fn)
                             || getStringNoLocale(profile, FOAF.name)
                             || "Anonymous user";
-                            
+
                             sendMessage("profileName", name);
                         } catch (error) {
                             sendMessage("error", "profile read failed: " + error.toString());
+                        }
+                    }
+
+                    window.fetchProfileBirthdate = async function(webId) {
+                        try {
+                            const myDataset = await getSolidDataset(webId, { fetch: session.fetch });
+                            const profile = getThing(myDataset, webId);
+                            const bday = getStringNoLocale(profile, VCARD.bday) || "";
+
+                            sendMessage("profileBirthdate", bday);
+                        } catch (error) {
+                            sendMessage("error", "birthdate read failed: " + error.toString());
                         }
                     }
                     
@@ -96,7 +108,7 @@
                             window.webkit.messageHandlers.solidAuth.postMessage({ "type": type, "payload": payload });
                         }
                     }
-
+                    
                     refresh();
                     
                 </script>
